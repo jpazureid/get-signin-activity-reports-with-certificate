@@ -19,7 +19,7 @@ PowerShell スクリプトで Microsoft Graph API および証明書を利用し
 
 まず、以下のドキュメントに記載された手順に従って、アプリケーションを登録し、"構成設定を収集する" に従ってドメイン名とクライアント ID を取得します。
 
-Azure AD Reporting API にアクセスするための前提条件
+Azure AD Reporting API にアクセスするための前提条件  
 https://docs.microsoft.com/ja-jp/azure/active-directory/active-directory-reporting-api-prerequisites-azure-portal
 
 続いて、GetSigninReportsWithCert.ps1 ファイルを開き、以下の 3 行を確認した結果に合わせて変更します。
