@@ -1,7 +1,11 @@
 ##
 ## Create self signed certificate
 ##
-$cert = New-SelfSignedCertificate -Subject "CN=SelfSignedCert" -CertStoreLocation "Cert:\CurrentUser\My"  -KeyExportPolicy Exportable -KeySpec Signature
+$cert = New-SelfSignedCertificate `
+    -Subject "CN=SelfSignedCert" `
+    -CertStoreLocation "Cert:\CurrentUser\My" `
+    -KeyExportPolicy Exportable `
+    -KeySpec Signature
 $cert
 
 ##
