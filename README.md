@@ -40,8 +40,8 @@ https://docs.microsoft.com/ja-jp/azure/active-directory/active-directory-reporti
 続いて、GetSigninReportsWithCert.ps1 ファイルを開き、以下の 3 行を確認した結果に合わせて変更します。$thumprint は上記例の証明書の値にしていますので、$tenantId と $clientId を適宜変更ください。
 
 ```powershell
-$tenantId = "yourtenant.onmicrosoft.com" # or "01234567-89AB-CDEF-0123-456789ABCDEF"
-$clientId = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+$tenantId = "yourtenant.onmicrosoft.com" # or GUID "01234567-89AB-CDEF-0123-456789ABCDEF"
+$clientId = "FEDCBA98-7654-3210-FEDC-BA9876543210"
 $thumprint = "3EE9F1B266F88848D1AECC72FDCE847CC49ED98C"
 ```
 
@@ -50,7 +50,6 @@ $thumprint = "3EE9F1B266F88848D1AECC72FDCE847CC49ED98C"
 ## 認証処理の内部動作
 
 証明書を使用した認証処理では、内部的に JWT (JSON Web Token) を作成し、それを Authorization ヘッダーに Bearer トークンとして添えることで Graph API へアクセスしています。
-
 
 ```
 GET https://graph.microsoft.com/beta/auditLogs/signIns HTTP/1.1
@@ -91,5 +90,5 @@ Authorization: Bearer eyJ0eXAiOi{省略}3lISmxZIn0.eyJhdWQiOi{省略}joiMS4wIn0.
 
 AcquireTokenAsync メソッドを使わずとも、自身で上記の JWT を作成 (自身で署名) すれば、同様の処理を実施いただけます。アサーションのフォーマットについては以下をご覧ください。
 
-Certificate credentials for application authentication
+Certificate credentials for application authentication  
 https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-certificate-credentials
