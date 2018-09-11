@@ -3,8 +3,8 @@ Add-Type -Path ".\Tools\Microsoft.IdentityModel.Clients.ActiveDirectory\Microsof
 #
 # Authorization & resource Url
 #
-$tenantId = "yourtenant.onmicrosoft.com" 
-$clientID = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+$tenantId = "yourtenant.onmicrosoft.com" # or GUID "01234567-89AB-CDEF-0123-456789ABCDEF"
+$clientId = "FEDCBA98-7654-3210-FEDC-BA9876543210"
 $thumprint = "0123456789ABCDEF0123456789ABCDEF01234567"
 
 $resource = "https://graph.microsoft.com"
@@ -29,7 +29,7 @@ $authContext = New-Object Microsoft.IdentityModel.Clients.ActiveDirectory.Authen
 #
 # Create credential for client application 
 #
-$clientCred = New-Object Microsoft.IdentityModel.Clients.ActiveDirectory.ClientAssertionCertificate $clientID, $cert
+$clientCred = New-Object Microsoft.IdentityModel.Clients.ActiveDirectory.ClientAssertionCertificate $clientId, $cert
 
 #
 # Acquire the authentication result
