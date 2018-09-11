@@ -56,7 +56,7 @@ GET https://graph.microsoft.com/beta/auditLogs/signIns HTTP/1.1
 Authorization: Bearer eyJ0eXAiOi{省略}3lISmxZIn0.eyJhdWQiOi{省略}joiMS4wIn0.FDlzA1xpic{省略}Nj_6yECdIw
 ```
 
-この JWT の元となる内容は以下のとおりです。以下では署名部分を省略し、ヘッダーとペイロード部分のみ記載しています。
+この JWT の元となる内容は以下のとおりです。署名部分を省略しヘッダーとペイロード部分のみ記載しています。
 
 ```json
 {
