@@ -5,11 +5,14 @@ Add-Type -Path ".\Tools\Microsoft.IdentityModel.Clients.ActiveDirectory\Microsof
 #
 $tenantId = "yourtenant.onmicrosoft.com" # or GUID "01234567-89AB-CDEF-0123-456789ABCDEF"
 $clientId = "FEDCBA98-7654-3210-FEDC-BA9876543210"
-$thumprint = "0123456789ABCDEF0123456789ABCDEF01234567"
+$thumprint = "3EE9F1B266F88848D1AECC72FDCE847CC49ED98C"
 
+$outputFile = "output.csv"
+
+#
+# Graph API Endpoint
+#
 $resource = "https://graph.microsoft.com"
-$outfile = "output.csv"
-$data = @()
 
 #
 # Authorization & resource Url
@@ -36,85 +39,129 @@ $clientCred = New-Object Microsoft.IdentityModel.Clients.ActiveDirectory.ClientA
 #
 $authResult = $authContext.AcquireTokenAsync($resource, $clientCred).Result 
 
-if ($null -ne $authResult.AccessToken) {
-    #
-    # Compose the access token type and access token for authorization header
-    #
-    $headerParams = @{'Authorization' = "$($authResult.AccessTokenType) $($authResult.AccessToken)"}
-    $url = "$resource/beta/auditLogs/signIns"
-    
-    Write-Output "Fetching data using Uri: $url"
- 
-    Do {
-        $myReport = (Invoke-WebRequest -UseBasicParsing -Headers $headerParams -Uri $url)
-        $myReportValue = ($myReport.Content | ConvertFrom-Json).value
-        $myReportVaultCount = $myReportValue.Count
- 
-        for ($j = 0; $j -lt $myReportVaultCount; $j++) {
-            $eachEvent = @{}
- 
-            $thisEvent = $myReportValue[$j]
-            $canumbers = $thisEvent.conditionalAccessPolicies.Count
- 
-            $eachEvent = $thisEvent |
-            Select-Object id,
-            createdDateTime,
-            userDisplayName,
-            userPrincipalName,
-            userId,
-            appId,
-            appDisplayName,
-            ipAddress,
-            clientAppUsed,
-            mfaDetail,
-            correlationId,
-            conditionalAccessStatus,
-            isRisky,
-            riskLevel,
- 
-            @{Name = 'status.errorCode'; Expression = {$_.status.errorCode}},
-            @{Name = 'status.failureReason'; Expression = {$_.status.failureReason}},
-            @{Name = 'status.additionalDetails'; Expression = {$_.status.additionalDetails}},
- 
-            @{Name = 'deviceDetail.deviceId'; Expression = {$_.deviceDetail.deviceId}},
-            @{Name = 'deviceDetail.displayName'; Expression = {$_.deviceDetail.displayName}},
-            @{Name = 'deviceDetail.operatingSystem'; Expression = {$_.deviceDetail.operatingSystem}},
-            @{Name = 'deviceDetail.browser'; Expression = {$_.deviceDetail.browser}},
- 
-            @{Name = 'location.city'; Expression = {$_.location.city}},
-            @{Name = 'location.state'; Expression = {$_.location.state}},
-            @{Name = 'location.countryOrRegion'; Expression = {$_.location.countryOrRegion}},
-            @{Name = 'location.geoCoordinates.altitude'; Expression = {$_.location.geoCoordinates.altitude}},
-            @{Name = 'location.geoCoordinates.latitude'; Expression = {$_.location.geoCoordinates.latitude}},
-            @{Name = 'location.geoCoordinates.longitude'; Expression = {$_.location.geoCoordinates.longitude}}
- 
-            for ($k = 0; $k -lt $canumbers; $k++) {
-                $temp = $thisEvent.conditionalAccessPolicies[$k].id
-                $eachEvent = $eachEvent | Add-Member @{"conditionalAccessPolicies.id$k" = $temp} -PassThru
- 
-                $temp = $thisEvent.conditionalAccessPolicies[$k].displayName
-                $eachEvent = $eachEvent | Add-Member @{"conditionalAccessPolicies.displayName$k" = $temp} -PassThru
- 
-                $temp = $thisEvent.conditionalAccessPolicies[$k].enforcedGrantControls
-                $eachEvent = $eachEvent | Add-Member @{"conditionalAccessPolicies.enforcedGrantControls$k" = $temp} -PassThru
- 
-                $temp = $thisEvent.conditionalAccessPolicies[$k].enforcedSessionControls
-                $eachEvent = $eachEvent | Add-Member @{"conditionalAccessPolicies.enforcedSessionControls$k" = $temp} -PassThru
- 
-                $temp = $thisEvent.conditionalAccessPolicies[$k].result
-                $eachEvent = $eachEvent | Add-Member @{"conditionalAccessPolicies.result$k" = $temp} -PassThru
-            }
-            $data += $eachEvent
-        }
+$data = @()
+
+#
+# Compose the access token type and access token for authorization header
+#
+$headerParams = @{'Authorization' = "$($authResult.AccessTokenType) $($authResult.AccessToken)"}
+$url = "$resource/beta/auditLogs/signIns"
+
+Do {
+    Write-Output "Fetching data..."
+
+    $report = (Invoke-WebRequest -UseBasicParsing -Headers $headerParams -Uri $url)
+    $reportValue = ($report.Content | ConvertFrom-Json).value
+    $reportVaultCount = $reportValue.Count
+
+    for ($j = 0; $j -lt $reportVaultCount; $j++) {
+        $eachEvent = New-Object PSCustomObject
+        $thisEvent = $reportValue[$j]
+        $canumbers = $thisEvent.conditionalAccessPolicies.Count
         
-        #
-        #Get url from next link
-        #
-        $url = ($myReport.Content | ConvertFrom-Json).'@odata.nextLink'
-    }while ($null -ne $url)
-}
-else {
-    Write-Host "ERROR: No Access Token"
-}
- 
-$data | Sort-Object -Property createdDateTime  | Export-Csv $outfile -encoding "utf8" -NoTypeInformation
+        $temp = $thisEvent.id
+        $eachEvent = $eachEvent | Add-Member "id" "$temp" -PassThru
+
+        $temp = $thisEvent.createdDateTime
+        $eachEvent = $eachEvent | Add-Member @{"createdDateTime" = "$temp"} -PassThru
+
+        $temp = $thisEvent.userDisplayName
+        $eachEvent = $eachEvent | Add-Member @{"userDisplayName" = "$temp"} -PassThru
+
+        $temp = $thisEvent.userPrincipalName
+        $eachEvent = $eachEvent | Add-Member @{"userPrincipalName" = "$temp"} -PassThru
+
+        $temp = $thisEvent.userId
+        $eachEvent = $eachEvent | Add-Member @{"userId" = "$temp"} -PassThru
+
+        $temp = $thisEvent.appId
+        $eachEvent = $eachEvent | Add-Member @{"appId" = "$temp"} -PassThru
+
+        $temp = $thisEvent.appDisplayName
+        $eachEvent = $eachEvent | Add-Member @{"appDisplayName" = "$temp"} -PassThru
+
+        $temp = $thisEvent.ipAddress
+        $eachEvent = $eachEvent | Add-Member @{"ipAddress" = "$temp"} -PassThru
+
+        $temp = $thisEvent.clientAppUsed
+        $eachEvent = $eachEvent | Add-Member @{"clientAppUsed" = "$temp"} -PassThru
+
+        $temp = $thisEvent.mfaDetail.authMethod
+        $eachEvent = $eachEvent | Add-Member @{"mfaDetail.authMethod" = "$temp"} -PassThru
+
+        $temp = $thisEvent.mfaDetail.authDetail
+        $eachEvent = $eachEvent | Add-Member @{"mfaDetail.authDetail" = "$temp"} -PassThru
+
+        $temp = $thisEvent.correlationId
+        $eachEvent = $eachEvent | Add-Member @{"correlationId" = "$temp"} -PassThru
+
+        $temp = $thisEvent.conditionalAccessStatus
+        $eachEvent = $eachEvent | Add-Member @{"conditionalAccessStatus" = "$temp"} -PassThru
+
+        $temp = $thisEvent.isRisky
+        $eachEvent = $eachEvent | Add-Member @{"isRisky" = "$temp"} -PassThru
+
+        $temp = $thisEvent.riskLevel
+        $eachEvent = $eachEvent | Add-Member @{"riskLevel" = "$temp"} -PassThru
+
+        $temp = $thisEvent.status.errorCode
+        $eachEvent = $eachEvent | Add-Member @{"status.errorCode" = "$temp"} -PassThru
+
+        $temp = $thisEvent.status.failureReason
+        $eachEvent = $eachEvent | Add-Member @{"status.failureReason" = "$temp"} -PassThru
+
+        $temp = $thisEvent.status.additionalDetails
+        $eachEvent = $eachEvent | Add-Member @{"status.additionalDetails" = "$temp"} -PassThru
+
+        $temp = $thisEvent.deviceDetail.deviceId
+        $eachEvent = $eachEvent | Add-Member @{"deviceDetail.deviceId" = "$temp"} -PassThru
+
+        $temp = $thisEvent.deviceDetail.displayName
+        $eachEvent = $eachEvent | Add-Member @{"deviceDetail.displayName" = "$temp"} -PassThru
+        
+        $temp = $thisEvent.deviceDetail.operatingSystem
+        $eachEvent = $eachEvent | Add-Member @{"deviceDetail.operatingSystem" = "$temp"} -PassThru
+
+        $temp = $thisEvent.deviceDetail.browser
+        $eachEvent = $eachEvent | Add-Member @{"deviceDetail.browser" = "$temp"} -PassThru
+
+        $temp = $thisEvent.deviceDetail.isCompliant
+        $eachEvent = $eachEvent | Add-Member @{"deviceDetail.isCompliant" = "$temp"} -PassThru
+
+        $temp = $thisEvent.deviceDetail.isManaged
+        $eachEvent = $eachEvent | Add-Member @{"deviceDetail.isManaged" = "$temp"} -PassThru
+
+        $temp = $thisEvent.deviceDetail.trustType
+        $eachEvent = $eachEvent | Add-Member @{"deviceDetail.trustType" = "$temp"} -PassThru
+
+        $temp = $thisEvent.location.city
+        $eachEvent = $eachEvent | Add-Member @{"location.city" = "$temp"} -PassThru
+
+        $temp = $thisEvent.location.state
+        $eachEvent = $eachEvent | Add-Member @{"location.state" = "$temp"} -PassThru
+
+        $temp = $thisEvent.location.countryOrRegion
+        $eachEvent = $eachEvent | Add-Member @{"location.countryOrRegion" = "$temp"} -PassThru
+
+        $temp = $thisEvent.location.geoCoordinates.altitude
+        $eachEvent = $eachEvent | Add-Member @{"location.geoCoordinates.altitude" = "$temp"} -PassThru
+
+        $temp = $thisEvent.location.geoCoordinates.latitude
+        $eachEvent = $eachEvent | Add-Member @{"location.geoCoordinates.latitude" = "$temp"} -PassThru
+
+        $temp = $thisEvent.location.geoCoordinates.longitude
+        $eachEvent = $eachEvent | Add-Member @{"location.geoCoordinates.longitude" = "$temp"} -PassThru
+
+        $temp = $thisEvent.conditionalAccessPolicies | ConvertTo-Json
+        $eachEvent = $eachEvent | Add-Member @{"conditionalAccessPolicies" = "$temp"} -PassThru
+
+        $data += $eachEvent
+    }
+    
+    #
+    # Get url from next link
+    #
+    $url = ($report.Content | ConvertFrom-Json).'@odata.nextLink'
+} while ($null -ne $url)
+
+$data | Sort-Object -Property createdDateTime | Export-Csv $outputFile -encoding "utf8" -NoTypeInformation
