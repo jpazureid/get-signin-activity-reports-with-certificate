@@ -1,7 +1,7 @@
 # Get sign-in activity reports with certificate
 Shows how to download sign-in activity log on Azure AD using AcquireTokeAsync method with PowerShell
 
-PowerShell スクリプトで Microsoft Graph API および証明書を利用して Azure AD のサインイン アクティビティ レポートを csv 形式で取得する方法を紹介します。
+PowerShell スクリプトで Microsoft Graph API および証明書を利用して Azure AD のサインイン アクティビティ レポートを JSON 形式で取得する方法を紹介します。
 
 平文のキーではなく証明書を用いたトークン取得を推奨しております。以下に一連の手順をおまとめしましたので、参考としていただければ幸いです。大まかに 3 つの手順に分けて解説いたします。
 
@@ -49,7 +49,7 @@ $clientId = "FEDCBA98-7654-3210-FEDC-BA9876543210"
 $thumprint = "3EE9F1B266F88848D1AECC72FDCE847CC49ED98C"
 ```
 
-最後に、GetSigninReportsWithCert.ps1 を実行します。これによりサインイン アクティビティ レポートを csv ファイルとして取得できます。
+最後に、GetSigninReportsWithCert.ps1 を実行します。これによりサインイン アクティビティ レポートを JSON ファイルとして取得できます。
 
 ## 認証処理の内部動作
 
