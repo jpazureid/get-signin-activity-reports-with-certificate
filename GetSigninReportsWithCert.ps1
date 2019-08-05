@@ -3,10 +3,10 @@ Add-Type -Path ".\Tools\Microsoft.IdentityModel.Clients.ActiveDirectory\Microsof
 #
 # Authorization & resource Url
 #
-$tenantId = "jutakata02.onmicrosoft.com" # or GUID "01234567-89AB-CDEF-0123-456789ABCDEF"
+$tenantId = "yourtenant.onmicrosoft.com" # or GUID "01234567-89AB-CDEF-0123-456789ABCDEF"
+$clientId = "FEDCBA98-7654-3210-FEDC-BA9876543210"
+$thumprint = "3EE9F1B266F88848D1AECC72FDCE847CC49ED98C"
 $resource = "https://graph.microsoft.com"
-$clientId = "4e642c6f-2d56-41e8-9785-0e63d629cdd6"
-$thumprint = "E066EB00F1FC5B180151FAE4EEC09B6FFB47AC76"
 $outFile = "output.json"
 $data = @()
 
