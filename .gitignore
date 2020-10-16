@@ -25,3 +25,6 @@ $RECYCLE.BIN/
 
 Tools
 SelfSignedCert.cer
+
+# outputfile
+output.json
