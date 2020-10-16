@@ -1,3 +1,16 @@
+[CmdletBinding()]
+param (
+    [Parameter(Mandatory = $false)]
+    [int]
+    $FromDaysAgo
+)
+
+if ($FromDaysAgo -and ($FromDaysAgo -lt 0) ) {
+    throw "FromDaysAgo must be a positive value."
+    # force exit
+    exit
+}
+
 Add-Type -Path "Tools\Microsoft.Identity.Client\Microsoft.Identity.Client.dll"
 
 #
@@ -48,7 +61,15 @@ Function Get-AuthorizationHeader {
 # Compose the access token type and access token for authorization header
 #
 $url = "$resource/v1.0/auditLogs/signIns"
-    
+
+
+if($FromDaysAgo){
+    $fromDate = [Datetime]::UtcNow.AddDays(-$FromDaysAgo)
+
+    $fromDateUtc = "{0:s}" -f $fromDate.ToUniversalTime() + "Z"
+    $url += "?`$filter=createdDateTime ge $fromDateUtc"
+}
+
 Write-Output "Fetching data using Uri: $url"
     
 Do {
