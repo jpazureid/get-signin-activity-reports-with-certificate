@@ -51,10 +51,10 @@ $thumprint = "3EE9F1B266F88848D1AECC72FDCE847CC49ED98C"
 
 最後に、GetSigninReportsWithCert.ps1 を実行します。これによりサインイン アクティビティ レポートを JSON ファイルとして取得できます。
 
-取得に時間がかかりすぎる場合は、`-FromDaysAgo` オプションを利用し、特定の日にち前のログのみを取得します。
+取得に時間がかかりすぎる場合は、`-FromDaysAgo` オプションを利用し、指定した日数前からのログのみを取得します。
 
 ```powershell
-# 3 日前からのサインイン アクティビティを取得します。
+# 3 日前からのサインイン アクティビティを取得します。* 単純に 72 時間前からのログとなります。
 .\GetSigninReportsWithCert.ps1 -FromDaysAgo 3
 ```
 
