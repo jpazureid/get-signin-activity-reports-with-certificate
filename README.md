@@ -51,6 +51,13 @@ $thumprint = "3EE9F1B266F88848D1AECC72FDCE847CC49ED98C"
 
 最後に、GetSigninReportsWithCert.ps1 を実行します。これによりサインイン アクティビティ レポートを JSON ファイルとして取得できます。
 
+取得に時間がかかりすぎる場合は、`-FromDaysAgo` オプションを利用し、指定した日数前からのログのみを取得します。
+
+```powershell
+# 3 日前からのサインイン アクティビティを取得します。* 単純に 72 時間前からのログとなります。
+.\GetSigninReportsWithCert.ps1 -FromDaysAgo 3
+```
+
 ## 認証処理の内部動作
 
 証明書を使用した認証処理では、内部的に JWT (JSON Web Token) を作成し、それを Authorization ヘッダーに Bearer トークンとして添えることで Graph API へアクセスしています。
