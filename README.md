@@ -58,6 +58,14 @@ $thumprint = "3EE9F1B266F88848D1AECC72FDCE847CC49ED98C"
 .\GetSigninReportsWithCert.ps1 -FromDaysAgo 3
 ```
 
+もしくは、`-From` および `-To` オプションを利用し、指定した日数前からのログのみを取得します。
+
+```powershell
+# 2020 年 11 月 1 日から 2 日までのサインイン アクティビティを取得します
+# 各オプションには実行環境のタイムゾーン (日本時間など) の時刻を指定します。
+.\GetSigninReportsWithCert.ps1 -From "2020-11-01 00:00:00" -To "2020-11-02 00:00:00"
+```
+
 ## 認証処理の内部動作
 
 証明書を使用した認証処理では、内部的に JWT (JSON Web Token) を作成し、それを Authorization ヘッダーに Bearer トークンとして添えることで Graph API へアクセスしています。
