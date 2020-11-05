@@ -2,14 +2,38 @@
 param (
     [Parameter(Mandatory = $false)]
     [int]
-    $FromDaysAgo
+    $FromDaysAgo,
+
+    [Parameter(Mandatory = $false)]
+    [Datetime]
+    $From,
+
+    [Parameter(Mandatory = $false)]
+    [Datetime]
+    $To
 )
 
-if ($FromDaysAgo -and ($FromDaysAgo -lt 0) ) {
-    throw "FromDaysAgo must be a positive value."
+if ($FromDaysAgo -and ($From -or $To)) {
+    throw "Use either 'FromDaysAgo' or 'From and To'."
     # force exit
     exit
 }
+elseif ($FromDaysAgo -and ($FromDaysAgo -lt 0) ) {
+    throw "'FromDaysAgo' must be a positive value."
+    # force exit
+    exit
+}
+elseif (-not ($FromDaysAgo) -and (-not ($From -and $To))) {
+    throw "Both 'From' and 'To' must be specified."
+    # force exit
+    exit
+}
+elseif (-not ($FromDaysAgo) -and ($From -gt $To)) {
+    throw "'From' must be earlier than 'To'."
+    # force exit
+    exit
+}
+
 
 Add-Type -Path "Tools\Microsoft.Identity.Client\Microsoft.Identity.Client.dll"
 
@@ -62,12 +86,17 @@ Function Get-AuthorizationHeader {
 #
 $url = "$resource/v1.0/auditLogs/signIns"
 
-
-if($FromDaysAgo){
+if ($FromDaysAgo) {
     $fromDate = [Datetime]::UtcNow.AddDays(-$FromDaysAgo)
 
     $fromDateUtc = "{0:s}" -f $fromDate.ToUniversalTime() + "Z"
     $url += "?`$filter=createdDateTime ge $fromDateUtc"
+}
+
+if ($From -and $To) {
+    $fromDateUtc = "{0:s}" -f $From.ToUniversalTime() + "Z"
+    $toDateUtc = "{0:s}" -f $To.ToUniversalTime() + "Z"
+    $url += "?`$filter=createdDateTime ge $fromDateUtc and createdDateTime lt $toDateUtc"
 }
 
 Write-Output "Fetching data using Uri: $url"
