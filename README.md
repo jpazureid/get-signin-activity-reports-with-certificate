@@ -1,4 +1,5 @@
 # Get sign-in activity reports with certificate
+
 Shows how to download sign-in activity log on Azure AD using AcquireTokeAsync method with PowerShell
 
 PowerShell スクリプトで Microsoft Graph API および証明書を利用して Azure AD のサインイン アクティビティ レポートを JSON 形式で取得する方法を紹介します。
@@ -11,7 +12,7 @@ PowerShell スクリプトで Microsoft Graph API および証明書を利用し
 
 以下が実行結果の例です。
 
-```
+```text
 PS C:\temp\get-signin-activity-reports-with-certificate-master> .\CreateAndExportCert.ps1
 
 
@@ -28,14 +29,14 @@ Name          : SelfSignedCert.cer
 
 ## 2. 処理に必要なライブラリを nuget で取得するスクリプト
 
-証明書を用いたトークン取得処理はライブラリを用いて行います。処理に必要なライブラリを nuget で取得します。GetAdModuleByNuget.ps1 を実行ください。本スクリプトを実行すると、実行フォルダー配下にフォルダーができ、Microsoft.IdentityModel.Clients.ActiveDirectory.dll などのファイルが保存されます。
+証明書を用いたトークン取得処理はライブラリを用いて行います。処理に必要なライブラリを nuget で取得します。GetAdModuleByNuget.ps1 を実行ください。本スクリプトを実行すると、実行フォルダー配下にフォルダーができ、Microsoft.Identity.Client.dll などのファイルが保存されます。
 
 ## 3. サインイン ログを取得するスクリプト
 
 証明書の準備および実行に必要なライブラリの準備が整いましたら、以下の手順で、アプリケーションおよびスクリプトを準備します。まず、以下のドキュメントに記載された手順に従って、アプリケーションを登録し、"構成設定を収集する" に従ってドメイン名とクライアント ID を取得します。
 
 Azure AD Reporting API にアクセスするための前提条件  
-https://docs.microsoft.com/ja-jp/azure/active-directory/active-directory-reporting-api-prerequisites-azure-portal
+<https://docs.microsoft.com/ja-jp/azure/active-directory/active-directory-reporting-api-prerequisites-azure-portal>
 
 また、キーを登録する代わりに、[公開キーのアップロード] を選択し、カレント ディレクトリにエクスポートされた証明書 SelfSignedCert.cer をアップロードします。
 
@@ -51,14 +52,15 @@ $thumprint = "3EE9F1B266F88848D1AECC72FDCE847CC49ED98C"
 
 最後に、GetSigninReportsWithCert.ps1 を実行します。これによりサインイン アクティビティ レポートを JSON ファイルとして取得できます。
 
-取得に時間がかかりすぎる場合は、`-FromDaysAgo` オプションを利用し、指定した日数前からのログのみを取得します。
+取得に時間がかかりすぎる場合は、`-FromDaysAgo` オプションを利用し、指定した日数以降のログのみを取得します。
 
 ```powershell
-# 3 日前からのサインイン アクティビティを取得します。* 単純に 72 時間前からのログとなります。
+# 3 日前からのサインイン アクティビティを取得します。
+# 単純に 72 時間前からのログとなります。
 .\GetSigninReportsWithCert.ps1 -FromDaysAgo 3
 ```
 
-もしくは、`-From` および `-To` オプションを利用し、指定した日数前からのログのみを取得します。
+もしくは、`-From` および `-To` オプションを利用し、指定した期間のログのみを取得します。
 
 ```powershell
 # 2020 年 11 月 1 日から 2 日までのサインイン アクティビティを取得します
@@ -66,11 +68,19 @@ $thumprint = "3EE9F1B266F88848D1AECC72FDCE847CC49ED98C"
 .\GetSigninReportsWithCert.ps1 -From "2020-11-01 00:00:00" -To "2020-11-02 00:00:00"
 ```
 
+特定のユーザーのログのみを取得したい場合は、`-UPN` オプションを使用して、ユーザーの User Principal Name を指定します。`-FromDaysAgo` オプションと併せて取得するには以下のようにします。
+
+```powershell
+# 3 日前からの user@contoso.com ユーザーのサインイン アクティビティを取得します。
+# 単純に 72 時間前からのログとなります。
+.\GetSigninReportsWithCert.ps1 -FromDaysAgo 3 -UPN user@contoso.com
+```
+
 ## 認証処理の内部動作
 
 証明書を使用した認証処理では、内部的に JWT (JSON Web Token) を作成し、それを Authorization ヘッダーに Bearer トークンとして添えることで Graph API へアクセスしています。
 
-```
+```http
 GET https://graph.microsoft.com/beta/auditLogs/signIns HTTP/1.1
 Authorization: Bearer eyJ0eXAiOi{省略}3lISmxZIn0.eyJhdWQiOi{省略}joiMS4wIn0.FDlzA1xpic{省略}Nj_6yECdIw
 ```
@@ -98,6 +108,7 @@ Authorization: Bearer eyJ0eXAiOi{省略}3lISmxZIn0.eyJhdWQiOi{省略}joiMS4wIn0.
     "idp": "https://sts.windows.net/{Tenant ID}/",
     "oid": "{Service Principal GUID}",
     "roles": [
+        "Directory.Read.All",
         "AuditLog.Read.All"
     ],
     "sub": "{Service Principal GUID}",
@@ -107,7 +118,7 @@ Authorization: Bearer eyJ0eXAiOi{省略}3lISmxZIn0.eyJhdWQiOi{省略}joiMS4wIn0.
 }
 ```
 
-AcquireTokenAsync メソッドを使わずとも、自身で上記の JWT を作成 (自身で署名) すれば、同様の処理を実施いただけます。アサーションのフォーマットについては以下をご覧ください。
+AcquireTokenForClient メソッドを使わずとも、自身で上記の JWT を作成 (自身で署名) すれば、同様の処理を実施いただけます。アサーションのフォーマットについては以下をご覧ください。
 
 Certificate credentials for application authentication  
-https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-certificate-credentials
+<https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-certificate-credentials>

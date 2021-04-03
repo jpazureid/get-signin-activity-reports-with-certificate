@@ -10,7 +10,11 @@ param (
 
     [Parameter(Mandatory = $false)]
     [Datetime]
-    $To
+    $To,
+
+    [Parameter(Mandatory = $false)]
+    [String]
+    $UPN
 )
 
 if ($FromDaysAgo -and ($From -or $To)) {
@@ -64,7 +68,6 @@ $cert = Get-ChildItem -path cert:\CurrentUser\My | Where-Object { $_.Thumbprint 
 # 
 $confidentialApp = [Microsoft.Identity.Client.ConfidentialClientApplicationBuilder]::Create($clientId).WithCertificate($cert).withTenantId($tenantId).Build()
 
-
 function Get-AccessToken() {
     $authResult = $confidentialApp.AcquireTokenForClient($scopes).ExecuteAsync().Result
     if ($null -eq $authResult) {
@@ -85,18 +88,30 @@ Function Get-AuthorizationHeader {
 # Compose the access token type and access token for authorization header
 #
 $url = "$resource/v1.0/auditLogs/signIns"
+$isParamAdded = $false
 
 if ($FromDaysAgo) {
     $fromDate = [Datetime]::UtcNow.AddDays(-$FromDaysAgo)
 
     $fromDateUtc = "{0:s}" -f $fromDate.ToUniversalTime() + "Z"
     $url += "?`$filter=createdDateTime ge $fromDateUtc"
+    $isParamAdded = $true
 }
 
 if ($From -and $To) {
     $fromDateUtc = "{0:s}" -f $From.ToUniversalTime() + "Z"
     $toDateUtc = "{0:s}" -f $To.ToUniversalTime() + "Z"
     $url += "?`$filter=createdDateTime ge $fromDateUtc and createdDateTime lt $toDateUtc"
+    $isParamAdded = $true
+}
+
+if ($UPN) {
+    If ($isParamAdded) {
+        $url += " and userPrincipalName eq '$UPN'"
+    }
+    else {
+        $url += "?`$filter=userPrincipalName eq '$UPN'"
+    }
 }
 
 Write-Output "Fetching data using Uri: $url"
