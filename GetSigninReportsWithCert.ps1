@@ -27,12 +27,12 @@ elseif ($FromDaysAgo -and ($FromDaysAgo -lt 0) ) {
     # force exit
     exit
 }
-elseif (-not ($FromDaysAgo) -and (-not ($From -and $To))) {
+elseif (($From -or $To) -and -not ($From -and $To) ) {
     throw "Both 'From' and 'To' must be specified."
     # force exit
     exit
 }
-elseif (-not ($FromDaysAgo) -and ($From -gt $To)) {
+elseif ($From -gt $To) {
     throw "'From' must be earlier than 'To'."
     # force exit
     exit
@@ -117,20 +117,43 @@ if ($UPN) {
 Write-Output "Fetching data using Uri: $url"
     
 Do {
-    $headerParams = Get-AuthorizationHeader
-    $myReport = (Invoke-WebRequest -UseBasicParsing -Headers $headerParams -Uri $url)
-    $myReportValue = ($myReport.Content | ConvertFrom-Json).value
+    $retryNeeded = $false
+    
+    try {
+        $headerParams = Get-AuthorizationHeader
+        $myReport = (Invoke-WebRequest -UseBasicParsing -Headers $headerParams -Uri $url)
+    }
+    catch {
+        $statusCode = $_.Exception.Response.StatusCode.value__
+        $stream = $_.Exception.Response.GetResponseStream()
+        $reader = New-Object System.IO.StreamReader $stream
+        $reader.BaseStream.Position = 0
+        $reader.DiscardBufferedData()
+        $errorMessage = $reader.ReadToEnd()
 
-    for ($j = 0; $j -lt $myReportValue.Count; $j++) {
-        $data += $myReportValue[$j]
+        if ($statusCode -eq 429) {
+            $retryAfter = $_.Exception.Response.Headers["Retry-After"]
+            Write-Error "429 Too Many Requests detected. Retry after $retryAfter seconds."
+            Start-Sleep -s $retryAfter
+            $retryNeeded = $true
+        }
+        else {
+            Write-Error "UnEpected Error: $errorMessage"
+            exit 1
+        }
     }
 
-    #
-    # Get url from next link
-    #
-    $url = ($myReport.Content | ConvertFrom-Json).'@odata.nextLink'
+    if (-Not $retryNeeded) {
+        $myReportValue = ($myReport.Content | ConvertFrom-Json).value
+        
+        for ($j = 0; $j -lt $myReportValue.Count; $j++) {
+            $data += $myReportValue[$j]
+        }
 
-} while ($null -ne $url)
+        $url = ($myReport.Content | ConvertFrom-Json).'@odata.nextLink'
+    }
+}
+while ($null -ne $url)
 
 $data | ConvertTo-Json | Out-File -FilePath $outfile
 Write-Host "Sign-in log is exported to $outfile"
