@@ -14,7 +14,11 @@ param (
 
     [Parameter(Mandatory = $false)]
     [String]
-    $UPN
+    $UPN,
+
+    [Parameter(Mandatory = $false)]
+    [ValidateSet("beta", "v1.0")]
+    $Version = "v1.0"
 )
 
 if ($FromDaysAgo -and ($From -or $To)) {
@@ -87,7 +91,7 @@ Function Get-AuthorizationHeader {
 #
 # Compose the access token type and access token for authorization header
 #
-$url = "$resource/v1.0/auditLogs/signIns"
+$url = "$resource/$version/auditLogs/signIns"
 $isParamAdded = $false
 
 if ($FromDaysAgo) {
