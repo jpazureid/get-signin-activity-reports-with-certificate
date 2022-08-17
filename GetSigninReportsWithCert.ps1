@@ -44,6 +44,7 @@ elseif ($From -gt $To) {
 
 
 Add-Type -Path "Tools\Microsoft.Identity.Client\Microsoft.Identity.Client.dll"
+Add-Type -Path "Tools\Microsoft.IdentityModel.Abstractions\Microsoft.IdentityModel.Abstractions.dll"
 
 #
 # Authorization & resource Url
